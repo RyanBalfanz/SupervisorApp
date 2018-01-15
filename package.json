@@ -20,5 +20,12 @@
   "bugs": {
     "url": "https://github.com/RyanBalfanz/SupervisorApp/issues"
   },
-  "homepage": "https://github.com/RyanBalfanz/SupervisorApp#readme"
+  "homepage": "https://github.com/RyanBalfanz/SupervisorApp#readme",
+  "dependencies": {
+    "electron": "^1.7.10",
+    "menubar": "^5.2.3"
+  },
+  "devDependencies": {
+    "electron-packager": "^10.1.1"
+  }
 }
