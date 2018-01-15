@@ -57,5 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+# macOS files
+.DS_Store
+
 # Build artifacts
 *-darwin-x64
