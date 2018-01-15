@@ -1,5 +1,5 @@
 {
-  "name": "supervisorapp",
+  "name": "Supervisor",
   "version": "0.1.0",
   "description": "Supervisor web interface in your menu bar Edit",
   "main": "index.js",
