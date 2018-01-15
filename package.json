@@ -1,0 +1,22 @@
+{
+  "name": "supervisorapp",
+  "version": "0.1.0",
+  "description": "Supervisor web interface in your menu bar Edit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RyanBalfanz/SupervisorApp.git"
+  },
+  "keywords": [
+    "Supervisor"
+  ],
+  "author": "Ryan Balfanz",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/RyanBalfanz/SupervisorApp/issues"
+  },
+  "homepage": "https://github.com/RyanBalfanz/SupervisorApp#readme"
+}
