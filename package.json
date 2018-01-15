@@ -4,6 +4,7 @@
   "description": "Supervisor web interface in your menu bar",
   "main": "index.js",
   "scripts": {
+    "build": "electron-packager . Supervisor --asar --icon=Icon.icns --version=0.1.0",
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
