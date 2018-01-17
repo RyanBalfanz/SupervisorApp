@@ -37,14 +37,12 @@ const menubarOptions = {
 let mb = menubar(menubarOptions)
 
 mb.on('ready', () => {
-  show_motd()
   mb.tray.on('right-click', () => {
-    console.log('try right-clicked')
     mb.tray.popUpContextMenu(get_right_click_menu())
   })
 })
-mb.on('after-create-window', () => { console.log('after-window-create') })
-mb.on('after-hide', () => { console.log('after-hide'); mb.app.hide() } )
+
+mb.on('after-hide', () => { mb.app.hide() } )
 
 function get_right_click_menu() {
   const template = [
@@ -93,7 +91,7 @@ function get_right_click_menu() {
       ]
     }
   ]
-  
+
   if (process.platform === 'darwin') {
     template.unshift({
       label: app.getName(),
@@ -109,7 +107,7 @@ function get_right_click_menu() {
         {role: 'quit'}
       ]
     })
-  
+
     // Edit menu
     template[1].submenu.push(
       {type: 'separator'},
@@ -121,7 +119,7 @@ function get_right_click_menu() {
         ]
       }
     )
-  
+
     // Window menu
     template[3].submenu = [
       {role: 'close'},
@@ -134,5 +132,3 @@ function get_right_click_menu() {
   const menu = Menu.buildFromTemplate(template)
   return menu;
 }
-function show_motd() { console.log(`${APP_NAME} is ready…`) }
-function hide_menubar_app() { mb.app.hide() }
