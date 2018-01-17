@@ -22,11 +22,11 @@
   },
   "homepage": "https://github.com/RyanBalfanz/SupervisorApp#readme",
   "dependencies": {
+    "electron-store": "^1.3.0",
     "menubar": "^5.2.3"
   },
   "devDependencies": {
     "electron": "^1.7.10",
-    "electron-packager": "^10.1.1",
-    "electron-store": "^1.3.0"
+    "electron-packager": "^10.1.1"
   }
 }
