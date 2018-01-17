@@ -1,10 +1,12 @@
 console.time('ready')
 const {app, Menu, Tray} = require('electron')
+const AutoLaunch = require('auto-launch');
 const menubar = require('menubar')
 const Store = require('electron-store');
 
 const APP_NAME = 'Supervisor'
 const APP_ICON = 'IconTemplate.png'
+const APP_PATH = `/Applications/${APP_NAME}.app`
 const GOLDEN_RATIO = (1.0 + Math.sqrt(5.0)) / 2.0
 const USER_SETTINGS_STORE_NAME = 'user-settings'
 
@@ -12,11 +14,21 @@ const defaults = {
   showDockIcon: false,
   menubarWindowWidth: 850,
   supervisorUrl: 'http://localhost:9001',
+  autoLaunchEnabled: true,
+  autoLaunch: {
+    isEnabled: true,
+    options: {
+      isHidden: true,
+    }
+  }
 }
+
+const autoLauncher = new AutoLaunch({ name: APP_NAME, path: APP_PATH });
 
 const userSettingsStore = new Store({
   name: USER_SETTINGS_STORE_NAME,
   defaults: {
+    autoLaunch: defaults.autoLaunch,
     showDockIcon: defaults.showDockIcon,
     supervisorUrl: defaults.supervisorUrl,
     windowBounds: {
@@ -24,6 +36,27 @@ const userSettingsStore = new Store({
       height: Math.round(defaults.menubarWindowWidth / GOLDEN_RATIO)
     },
   }
+});
+
+// Enable or disable auto-launching if incorrectly set.
+autoLauncher.isEnabled(defaults.autoLaunch.options)
+.then(function(isEnabled){
+    if(isEnabled){
+      console.info('Auto-launching is enabled')
+      if (!userSettingsStore.get('autoLaunch.isEnabled')) {
+        console.info('Disabling auto-launch')
+        autoLauncher.disable()
+      }
+    } else {
+      console.info('Auto-launching is not enabled')
+      if (userSettingsStore.get('autoLaunch.isEnabled')) {
+        console.info('Enabling auto-launch')
+        autoLauncher.enable()
+      }
+    }
+})
+.catch(function(err){
+    console.error(err)
 });
 
 const menubarOptions = {

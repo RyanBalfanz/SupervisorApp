@@ -1,6 +1,6 @@
 {
   "name": "Supervisor",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.2",
   "description": "Supervisor web interface in your menu bar",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/RyanBalfanz/SupervisorApp#readme",
   "dependencies": {
+    "auto-launch": "^5.0.5",
     "electron-store": "^1.3.0",
     "menubar": "^5.2.3"
   },
