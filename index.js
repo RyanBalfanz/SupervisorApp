@@ -3,7 +3,7 @@ const {app, Menu, Tray} = require('electron')
 const menubar = require('menubar')
 const Store = require('electron-store');
 
-const APP_NAME = 'Supervior'
+const APP_NAME = 'Supervisor'
 const APP_ICON = 'IconTemplate.png'
 const GOLDEN_RATIO = (1.0 + Math.sqrt(5.0)) / 2.0
 const USER_SETTINGS_STORE_NAME = 'user-settings'
