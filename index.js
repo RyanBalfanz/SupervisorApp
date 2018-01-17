@@ -1,3 +1,4 @@
+console.time('ready')
 const {app, Menu, Tray} = require('electron')
 const menubar = require('menubar')
 const Store = require('electron-store');
@@ -40,6 +41,7 @@ mb.on('ready', () => {
   mb.tray.on('right-click', () => {
     mb.tray.popUpContextMenu(get_right_click_menu())
   })
+  console.timeEnd('ready')
 })
 
 mb.on('after-hide', () => { mb.app.hide() } )
