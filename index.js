@@ -8,7 +8,7 @@ const GOLDEN_RATIO = (1.0 + Math.sqrt(5.0)) / 2.0
 const USER_SETTINGS_STORE_NAME = 'user-settings'
 
 const defaults = {
-  showDockIcon: true,
+  showDockIcon: false,
   menubarWindowWidth: 850,
   supervisorUrl: 'http://localhost:9001',
 }
