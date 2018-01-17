@@ -1,21 +1,37 @@
 const {app, Menu, Tray} = require('electron')
 const menubar = require('menubar')
+const Store = require('electron-store');
 
 const APP_NAME = 'Supervior'
-const GOLDEN_RATIO = 1.6180339887498948482
-const MENUBAR_WINDOW_WIDTH = 850
-const MENUBAR_WINDOW_HEIGHT= Math.round(MENUBAR_WINDOW_WIDTH/GOLDEN_RATIO)
-const SUPERVISOR_URL = 'http://localhost:9001'
+const APP_ICON = 'IconTemplate.png'
+const GOLDEN_RATIO = (1.0 + Math.sqrt(5.0)) / 2.0
+const USER_SETTINGS_STORE_NAME = 'user-settings'
+
+const defaults = {
+  showDockIcon: true,
+  menubarWindowWidth: 850,
+  supervisorUrl: 'http://localhost:9001',
+}
+
+const userSettingsStore = new Store({
+  name: USER_SETTINGS_STORE_NAME,
+  defaults: {
+    showDockIcon: defaults.showDockIcon,
+    supervisorUrl: defaults.supervisorUrl,
+    windowBounds: {
+      width: defaults.menubarWindowWidth,
+      height: Math.round(defaults.menubarWindowWidth / GOLDEN_RATIO)
+    },
+  }
+});
 
 const menubarOptions = {
-  icon: 'IconTemplate.png',
-  index: SUPERVISOR_URL,
-  width: MENUBAR_WINDOW_WIDTH,
-  height: MENUBAR_WINDOW_HEIGHT,
-  // preloadWindow: false,
-  showDockIcon: true,
-  // showOnRightClick: false,
-  tooltip: APP_NAME
+  icon: APP_ICON,
+  index: userSettingsStore.get('supervisorUrl'),
+  width: userSettingsStore.get('windowBounds')['width'],
+  height: userSettingsStore.get('windowBounds')['height'],
+  showDockIcon: userSettingsStore.get('showDockIcon'),
+  tooltip: APP_NAME,
 }
 
 let mb = menubar(menubarOptions)
