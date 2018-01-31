@@ -1,8 +1,11 @@
 console.time('ready')
-const {app, Menu, Tray} = require('electron')
-const AutoLaunch = require('auto-launch');
+const {app, clipboard, Menu} = require('electron')
+const AutoLaunch = require('auto-launch')
 const menubar = require('menubar')
-const Store = require('electron-store');
+const Store = require('electron-store')
+const unhandled = require('electron-unhandled')
+
+const SupervisorClient = require('./supervisor_client')
 
 const APP_NAME = 'Supervisor'
 const APP_ICON = 'IconTemplate.png'
@@ -18,12 +21,12 @@ const defaults = {
   autoLaunch: {
     isEnabled: true,
     options: {
-      isHidden: true,
+      isHidden: true
     }
   }
 }
 
-const autoLauncher = new AutoLaunch({ name: APP_NAME, path: APP_PATH });
+const autoLauncher = new AutoLaunch({ name: APP_NAME, path: APP_PATH })
 
 const userSettingsStore = new Store({
   name: USER_SETTINGS_STORE_NAME,
@@ -34,30 +37,32 @@ const userSettingsStore = new Store({
     windowBounds: {
       width: defaults.menubarWindowWidth,
       height: Math.round(defaults.menubarWindowWidth / GOLDEN_RATIO)
-    },
+    }
   }
-});
+})
+
+unhandled()
 
 // Enable or disable auto-launching if incorrectly set.
 autoLauncher.isEnabled(defaults.autoLaunch.options)
-.then(function(isEnabled){
-    if(isEnabled){
-      console.info('Auto-launching is enabled')
-      if (!userSettingsStore.get('autoLaunch.isEnabled')) {
-        console.info('Disabling auto-launch')
-        autoLauncher.disable()
-      }
-    } else {
-      console.info('Auto-launching is not enabled')
-      if (userSettingsStore.get('autoLaunch.isEnabled')) {
-        console.info('Enabling auto-launch')
-        autoLauncher.enable()
-      }
+.then(function (isEnabled) {
+  if (isEnabled) {
+    console.info('Auto-launching is enabled')
+    if (!userSettingsStore.get('autoLaunch.isEnabled')) {
+      console.info('Disabling auto-launch')
+      autoLauncher.disable()
     }
+  } else {
+    console.info('Auto-launching is not enabled')
+    if (userSettingsStore.get('autoLaunch.isEnabled')) {
+      console.info('Enabling auto-launch')
+      autoLauncher.enable()
+    }
+  }
 })
-.catch(function(err){
-    console.error(err)
-});
+.catch(function (err) {
+  console.error(err)
+})
 
 const menubarOptions = {
   icon: APP_ICON,
@@ -65,21 +70,90 @@ const menubarOptions = {
   width: userSettingsStore.get('windowBounds')['width'],
   height: userSettingsStore.get('windowBounds')['height'],
   showDockIcon: userSettingsStore.get('showDockIcon'),
-  tooltip: APP_NAME,
+  tooltip: APP_NAME
 }
 
 let mb = menubar(menubarOptions)
+let supervisor
+
+let supervisorState = ''
+let procs = []
 
 mb.on('ready', () => {
-  mb.tray.on('right-click', () => {
-    mb.tray.popUpContextMenu(get_right_click_menu())
+  const supervisorConfig = { host: 'localhost', port: 9001, path: '/RPC2' }
+  supervisor = new SupervisorClient(supervisorConfig)
+  init()
+  const initInterval = setInterval(() => { init() }, 5000)
+  // clearInterval(initInterval)
+
+  mb.tray.on('right-click', (event) => {
+    init()
+    let menu = getRightClickMenu()
+    // let menu = getRightClickMenuSupervisorOnly()
+    mb.tray.popUpContextMenu(menu)
+    menu = getRightClickMenu()
   })
   console.timeEnd('ready')
 })
 
-mb.on('after-hide', () => { mb.app.hide() } )
+mb.on('after-hide', () => {
+  mb.app.hide()
+})
 
-function get_right_click_menu() {
+function init () {
+  supervisor.getState()
+    .then((result) => { supervisorState = result })
+  supervisor.listAllMethods()
+  supervisor.getAllProcessInfo()
+    .then((result) => { procs = result })
+}
+
+function getSupervisorMenuItemTemplate() {
+  const template = {
+    label: 'Programs and Groups',
+    submenu: [
+      {
+        label: `Supervisor status: ${supervisor.getState()}`,
+        enabled: false
+      },
+      { type: 'separator' },
+      { label: 'Start Supervisor', enabled: false, click: () => { supervisor.start() } },
+      { label: 'Stop Supervisor', enabled: false, click: () => { supervisor.stop() } },
+      { label: 'Restart Supervisor', enabled: true, click: () => { supervisor.restart() } },
+      { type: 'separator' },
+      {
+        label: 'All',
+        submenu: [
+          { label: 'Start All', click: () => { supervisor.startAllProcesses() } },
+          { label: 'Stop All', click: () => { supervisor.stopAllProcesses() } },
+          { label: 'Restart All', click: () => { supervisor.restartAllProcesses() } }
+        ]
+      },
+      { type: 'separator' }
+    ].concat(procs.map((value, index) => {
+      return {
+        click: (menuItem, browserWindow, event) => { console.log(menuItem, browserWindow, event) },
+        label: value.name,
+        submenu: [
+          { label: 'Start', enabled: [0].includes(value.state), click: () => { supervisor.startProcess(value.name) } },
+          { label: 'Stop', enabled: [20].includes(value.state), click: () => { supervisor.stopProcess(value.name) } },
+          { label: 'Restart', enabled: [20].includes(value.state), click: () => { supervisor.restartProcess(value.name) } },
+          { type: 'separator' },
+          { label: 'Logs', submenu: [
+            { label: `${value.stdout_logfile}`, click: () => { clipboard.writeText(value.stdout_logfile) } },
+            { label: `${value.stderr_logfile}`, click: () => { clipboard.writeText(value.stderr_logfile) } }
+          ] },
+          { type: 'separator' },
+          { label: `State: ${value.statename}`, enabled: false },
+          { label: `${value.description}`, enabled: false }
+        ]
+      }
+    }))
+  }
+  return template
+}
+
+function getRightClickMenuTemplate() {
   const template = [
     {
       label: 'Edit',
@@ -127,6 +201,8 @@ function get_right_click_menu() {
     }
   ]
 
+  template.unshift(getSupervisorMenuItemTemplate());
+
   if (process.platform === 'darwin') {
     template.unshift({
       label: app.getName(),
@@ -144,7 +220,7 @@ function get_right_click_menu() {
     })
 
     // Edit menu
-    template[1].submenu.push(
+    template[2].submenu.push(
       {type: 'separator'},
       {
         label: 'Speech',
@@ -156,7 +232,7 @@ function get_right_click_menu() {
     )
 
     // Window menu
-    template[3].submenu = [
+    template[4].submenu = [
       {role: 'close'},
       {role: 'minimize'},
       {role: 'zoom'},
@@ -164,6 +240,17 @@ function get_right_click_menu() {
       {role: 'front'}
     ]
   }
+  return template
+}
+
+function getRightClickMenuSupervisorOnly() {
+  const template = getSupervisorMenuItemTemplate().submenu
   const menu = Menu.buildFromTemplate(template)
-  return menu;
+  return menu
+}
+
+function getRightClickMenu () {
+  const template = getRightClickMenuTemplate()
+  const menu = Menu.buildFromTemplate(template)
+  return menu
 }
