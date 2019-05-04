@@ -13,6 +13,7 @@ const APP_PATH = `/Applications/${APP_NAME}.app`
 const GOLDEN_RATIO = (1.0 + Math.sqrt(5.0)) / 2.0
 const USER_SETTINGS_STORE_NAME = 'user-settings'
 
+const reloadIndexOnShow = true
 const defaults = {
   showDockIcon: false,
   menubarWindowWidth: 850,
@@ -25,6 +26,21 @@ const defaults = {
     }
   }
 }
+
+const LOADING_PAGE_TEMPLATE_CSS = `
+.loader {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+#grad {
+background: RGB(203, 203, 203);
+}
+`
+const LOADING_PAGE_TEMPLATE = `<html><head><style>${LOADING_PAGE_TEMPLATE_CSS}</style></head><body id='grad'></body></html>`
 
 const autoLauncher = new AutoLaunch({ name: APP_NAME, path: APP_PATH })
 
@@ -66,9 +82,10 @@ autoLauncher.isEnabled(defaults.autoLaunch.options)
 
 const menubarOptions = {
   icon: APP_ICON,
-  index: userSettingsStore.get('supervisorUrl'),
+  index: reloadIndexOnShow ? `data:text/html,${LOADING_PAGE_TEMPLATE}` : userSettingsStore.get('supervisorUrl'),
   width: userSettingsStore.get('windowBounds')['width'],
   height: userSettingsStore.get('windowBounds')['height'],
+  preloadWindow: true,
   showDockIcon: userSettingsStore.get('showDockIcon'),
   tooltip: APP_NAME
 }
@@ -96,8 +113,28 @@ mb.on('ready', () => {
   console.timeEnd('ready')
 })
 
+mb.on('create-window', () => {
+  console.log('create-window')
+  const HTML = LOADING_PAGE_TEMPLATE
+  console.log(HTML)
+  // mb.window.loadURL(`data:text/html,${LOADING_PAGE_TEMPLATE}`)
+})
+
+mb.on('show', () => {
+  console.log('show')
+  if (reloadIndexOnShow) {
+    mb.window.loadURL(userSettingsStore.get('supervisorUrl'))
+  }
+})
+
 mb.on('after-hide', () => {
+  console.log('after-hide')
   mb.app.hide()
+  if (reloadIndexOnShow) {
+    const HTML = LOADING_PAGE_TEMPLATE
+    console.log(HTML)
+    mb.window.loadURL(`data:text/html,${LOADING_PAGE_TEMPLATE}`)
+  }
 })
 
 function init () {
